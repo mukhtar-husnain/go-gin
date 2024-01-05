@@ -9,7 +9,7 @@ import (
 	"github.com/mukhtar-husnain/go-gin/controller"
 	"github.com/mukhtar-husnain/go-gin/middleware"
 	"github.com/mukhtar-husnain/go-gin/service"
-	gindump "github.com/tpkeeper/gin-dump"
+	// gindump "github.com/tpkeeper/gin-dump"
 )
 
 var (
@@ -27,21 +27,31 @@ func main() {
 	setupLogOutput()
 	server := gin.New()
 
+	server.Static("/css", "./templates/css")
+	server.LoadHTMLGlob("templates/*.html")
+
 	server.Use(gin.Recovery(), middleware.Logger(),
-		middleware.BasicAuth(), gindump.Dump())
+		middleware.BasicAuth())
 
-	server.GET("/videos", func(c *gin.Context) {
-		videos := videoController.FindAll()
-		c.JSON(http.StatusOK, videos)
-	})
+	apiRoutes := server.Group("/api")
+	{
+		apiRoutes.GET("/videos", func(c *gin.Context) {
+			videos := videoController.FindAll()
+			c.JSON(http.StatusOK, videos)
+		})
 
-	server.POST("/videos", func(c *gin.Context) {
-		err := videoController.Save(c)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "valid"})
-		}
-	})
+		apiRoutes.POST("/videos", func(c *gin.Context) {
+			err := videoController.Save(c)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"message": "valid"})
+			}
+		})
+	}
+
+	viewRoutes := server.Group("/view")
+	viewRoutes.GET("/videos", videoController.ShowAll )
+
 	server.Run(":8080")
 }
