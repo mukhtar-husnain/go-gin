@@ -33,7 +33,7 @@ func main() {
 	server.Use(gin.Recovery(), middleware.Logger(),
 		middleware.BasicAuth())
 
-	apiRoutes := server.Group("/api")
+	apiRoutes := server.Group("/api", middleware.BasicAuth())
 	{
 		apiRoutes.GET("/videos", func(c *gin.Context) {
 			videos := videoController.FindAll()
